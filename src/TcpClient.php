@@ -3,6 +3,10 @@
 namespace Spatie\SimpleTcpClient;
 
 use Exception;
+use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
+use Spatie\SimpleTcpClient\Exceptions\CommunicationFailed;
+use Spatie\SimpleTcpClient\Exceptions\ClientNotConnected;
+use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
 
 class TcpClient
 {
@@ -27,7 +31,9 @@ class TcpClient
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 
         if ($this->socket === false) {
-            throw new Exception("Failed to create socket: " . socket_strerror(socket_last_error()));
+            $errorCode = socket_last_error();
+            $errorMessage = socket_strerror($errorCode);
+            throw CouldNotConnect::failedToCreateSocket($this->host, $this->port, $errorCode, $errorMessage);
         }
 
         // Set socket to non-blocking for connection timeout
@@ -37,30 +43,31 @@ class TcpClient
 
         if ($result === false) {
             $error = socket_last_error($this->socket);
-            
+
             // EINPROGRESS is expected for non-blocking connect
             if ($error === SOCKET_EINPROGRESS || $error === SOCKET_EALREADY || $error === SOCKET_EWOULDBLOCK) {
                 // Use select to wait for connection with timeout
                 $read = null;
                 $write = [$this->socket];
                 $except = [$this->socket];
-                
-                $result = socket_select($read, $write, $except, $this->timeout);
-                
+
+                $result = socket_select($read, $write, $except, (int)$this->timeout);
+
                 if ($result === 0) {
                     $this->close();
-                    throw new Exception("Connection timeout to {$this->host}:{$this->port}");
+                    throw ConnectionTimeout::toHost($this->host, $this->port);
                 }
-                
+
                 if ($result === false || !empty($except)) {
-                    $error = socket_strerror(socket_last_error($this->socket));
+                    $errorCode = socket_last_error($this->socket);
+                    $errorMessage = socket_strerror($errorCode);
                     $this->close();
-                    throw new Exception("Failed to connect to {$this->host}:{$this->port} - {$error}");
+                    throw CouldNotConnect::connectionFailed($this->host, $this->port, $errorCode, $errorMessage);
                 }
             } else {
-                $error = socket_strerror($error);
+                $errorMessage = socket_strerror($error);
                 $this->close();
-                throw new Exception("Failed to connect to {$this->host}:{$this->port} - {$error}");
+                throw CouldNotConnect::connectionFailed($this->host, $this->port, $error, $errorMessage);
             }
         }
 
@@ -81,30 +88,33 @@ class TcpClient
     public function send(string $message): self
     {
         if (!$this->socket) {
-            throw new Exception("Not connected to server");
+            throw ClientNotConnected::toServer();
         }
 
         $bytes = socket_write($this->socket, $message, strlen($message));
 
         if ($bytes === false) {
-            throw new Exception("Failed to send data: " . socket_strerror(socket_last_error($this->socket)));
+            $errorCode = socket_last_error($this->socket);
+            $errorMessage = socket_strerror($errorCode);
+            throw CommunicationFailed::sendFailed($errorCode, $errorMessage);
         }
 
         return $this;
     }
 
-    public function receive(int $maxLength = 1024): ?string
+    public function receive(int $maxLength = 4096): ?string
     {
         if (!$this->socket) {
-            throw new Exception("Not connected to server");
+            throw ClientNotConnected::toServer();
         }
 
-        $data = socket_read($this->socket, $maxLength, PHP_BINARY_READ);
+        $data = socket_read($this->socket, $maxLength);
 
         if ($data === false) {
             $error = socket_last_error($this->socket);
             if ($error !== 0) {
-                throw new Exception("Failed to receive data: " . socket_strerror($error));
+                $errorMessage = socket_strerror($error);
+                throw CommunicationFailed::receiveFailed($error, $errorMessage);
             }
             return null; // Connection closed gracefully
         }
@@ -127,4 +137,5 @@ class TcpClient
     {
         $this->close();
     }
+
 }

@@ -1,6 +1,8 @@
 <?php
 
 use Spatie\SimpleTcpClient\TcpClient;
+use Spatie\SimpleTcpClient\Exceptions\ClientNotConnected;
+use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
 
 it('can connect to httpbin.org and send HTTP request', function () {
     $client = new TcpClient('httpbin.org', 80, 10);
@@ -98,13 +100,13 @@ it('throws exception when connecting to closed port', function () {
 it('throws exception when sending without connection', function () {
     $client = new TcpClient('localhost', 8080);
 
-    expect(fn() => $client->send('test'))->toThrow(Exception::class, 'Not connected to server');
+    expect(fn() => $client->send('test'))->toThrow(ClientNotConnected::class, 'Not connected to server');
 });
 
 it('throws exception when receiving without connection', function () {
     $client = new TcpClient('localhost', 8080);
 
-    expect(fn() => $client->receive())->toThrow(Exception::class, 'Not connected to server');
+    expect(fn() => $client->receive())->toThrow(ClientNotConnected::class, 'Not connected to server');
 });
 
 it('can handle connection timeout', function () {
@@ -113,7 +115,7 @@ it('can handle connection timeout', function () {
 
     $start = microtime(true);
 
-    expect(fn() => $client->connect())->toThrow(Exception::class, 'Connection timeout');
+    expect(fn() => $client->connect())->toThrow(ConnectionTimeout::class, 'Connection timeout');
 
     $elapsed = microtime(true) - $start;
 
