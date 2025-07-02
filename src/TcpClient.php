@@ -2,24 +2,26 @@
 
 namespace Spatie\SimpleTcpClient;
 
-use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
-use Spatie\SimpleTcpClient\Exceptions\CommunicationFailed;
 use Spatie\SimpleTcpClient\Exceptions\ClientNotConnected;
+use Spatie\SimpleTcpClient\Exceptions\CommunicationFailed;
 use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
+use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
 
 class TcpClient
 {
     protected mixed $socket = null;
+
     protected string $host;
+
     protected int $port;
+
     protected int|float $timeout;
 
     public function __construct(
         string $host = 'localhost',
         int $port = 8080,
         int|float $timeout = 10
-    )
-    {
+    ) {
         $this->host = $host;
         $this->port = $port;
         $this->timeout = $timeout;
@@ -50,14 +52,14 @@ class TcpClient
                 $write = [$this->socket];
                 $except = [$this->socket];
 
-                $result = socket_select($read, $write, $except, (int)$this->timeout);
+                $result = socket_select($read, $write, $except, (int) $this->timeout);
 
                 if ($result === 0) {
                     $this->close();
                     throw ConnectionTimeout::toHost($this->host, $this->port);
                 }
 
-                if ($result === false || !empty($except)) {
+                if ($result === false || ! empty($except)) {
                     $errorCode = socket_last_error($this->socket);
                     $errorMessage = socket_strerror($errorCode);
                     $this->close();
@@ -74,8 +76,8 @@ class TcpClient
         socket_set_block($this->socket);
 
         $timeoutArray = [
-            'sec' => (int)$this->timeout,
-            'usec' => (int)(($this->timeout - (int)$this->timeout) * 1000000)
+            'sec' => (int) $this->timeout,
+            'usec' => (int) (($this->timeout - (int) $this->timeout) * 1000000),
         ];
 
         socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, $timeoutArray);
@@ -86,7 +88,7 @@ class TcpClient
 
     public function send(string $message): self
     {
-        if (!$this->socket) {
+        if (! $this->socket) {
             throw ClientNotConnected::toServer();
         }
 
@@ -103,7 +105,7 @@ class TcpClient
 
     public function receive(int $maxLength = 4096): ?string
     {
-        if (!$this->socket) {
+        if (! $this->socket) {
             throw ClientNotConnected::toServer();
         }
 
@@ -115,6 +117,7 @@ class TcpClient
                 $errorMessage = socket_strerror($error);
                 throw CommunicationFailed::receiveFailed($error, $errorMessage);
             }
+
             return null; // Connection closed gracefully
         }
 
