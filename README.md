@@ -121,7 +121,7 @@ use Spatie\SimpleTcpClient\TcpClient
 use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
 
 try {
-    $client = new TcpClient('8.8.8.8', port: 53, timeout: 5);
+    $client = new TcpClient(host: '8.8.8.8', port: 53, timeout: 5);
     
     $client->connect();
     
