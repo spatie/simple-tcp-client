@@ -117,7 +117,7 @@ $client->close();
 In this example, we are going to check if port 53 is open or closed.
 
 ```php
-use Spatie\SimpleTcpClient\TcpClient
+use Spatie\SimpleTcpClient\TcpClient;
 use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
 
 try {
@@ -138,7 +138,7 @@ try {
 The client supports connection timeouts to prevent hanging:
 
 ```php
-use Spatie\SimpleTcpClient\TcpClient
+use Spatie\SimpleTcpClient\TcpClient;
 use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
 
 $client = new TcpClient(host: 'slow-server.com', port: 80, timeout: 5); // 5 second timeout
