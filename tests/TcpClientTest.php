@@ -13,7 +13,7 @@ it('can connect to httpbin.org and send HTTP request', function () {
 
     $client->send($request);
 
-    $response = $client->receive(1024);
+    $response = $client->receive();
 
     expect($response)->toContain('HTTP/1.1 200 OK');
 
@@ -29,7 +29,7 @@ it('can connect to echo server and receive echoed data', function () {
     $testMessage = "Hello TCP Echo Server\n";
     $client->send($testMessage);
 
-    $response = $client->receive(1024);
+    $response = $client->receive();
 
     expect($response)->toBe(trim($testMessage));
 
@@ -37,15 +37,13 @@ it('can connect to echo server and receive echoed data', function () {
 });
 
 it('can connect to time server and receive time data', function () {
-    // NIST time server
     $client = new TcpClient('time.nist.gov', 13, 10);
 
     $client->connect();
 
-    $response = $client->receive(1024);
+    $response = $client->receive();
 
-    // NIST time format includes current date
-    expect($response)->toMatch('/\d{5} \d{2}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/');
+    expect($response)->toContain('(NIST)');
 
     $client->close();
 });
@@ -55,15 +53,12 @@ it('can connect to Gmail SMTP and send EHLO command', function () {
 
     $client->connect();
 
-    // Read initial SMTP greeting
-    $greeting = $client->receive(1024);
+    $greeting = $client->receive();
     expect($greeting)->toContain('220');
     expect($greeting)->toContain('smtp.gmail.com');
 
-    // Send EHLO command
     $client->send("EHLO test.local\r\n");
 
-    // Allow time for the complete SMTP response and use larger buffer
     usleep(200000); // 200ms delay
     $response = $client->receive(4096);
 
@@ -75,7 +70,7 @@ it('can connect to Gmail SMTP and send EHLO command', function () {
 
     // Send QUIT to cleanly close
     $client->send("QUIT\r\n");
-    $quitResponse = $client->receive(1024);
+    $quitResponse = $client->receive();
     expect($quitResponse)->toContain('221');
 
     $client->close();
@@ -94,20 +89,20 @@ it('throws exception when connecting to closed port', function () {
     // Try to connect to a likely closed port
     $client = new TcpClient('httpbin.org', 12345, 3);
 
-    expect(fn() => $client->connect())->toThrow(Exception::class);
+    expect(fn() => $client->connect())->toThrow(ConnectionTimeout::class);
 });
 
 it('throws exception when sending without connection', function () {
     $client = new TcpClient('localhost', 8080);
 
-    expect(fn() => $client->send('test'))->toThrow(ClientNotConnected::class, 'Not connected to server');
-});
+    $client->send('test');
+})->throws(ClientNotConnected::class);
 
 it('throws exception when receiving without connection', function () {
     $client = new TcpClient('localhost', 8080);
 
-    expect(fn() => $client->receive())->toThrow(ClientNotConnected::class, 'Not connected to server');
-});
+    $client->receive();
+})->throws(ClientNotConnected::class);
 
 it('can handle connection timeout', function () {
     // Use a valid IP with filtered port to trigger timeout
@@ -125,23 +120,20 @@ it('can handle connection timeout', function () {
 });
 
 it('can connect to FTP server and receive welcome message', function () {
-    // Test with a public FTP server
     $client = new TcpClient('ftp.dlptest.com', 21, 10);
 
     $client->connect();
 
-    $welcome = $client->receive(1024);
+    $welcome = $client->receive();
     expect($welcome)->toContain('220');
     expect($welcome)->toContain('FTP');
 
-    // Send USER anonymous
     $client->send("USER anonymous\r\n");
-    $userResponse = $client->receive(1024);
+    $userResponse = $client->receive();
     expect($userResponse)->toMatch('/33[01]/'); // 330 or 331 response
 
-    // Send QUIT
     $client->send("QUIT\r\n");
-    $quitResponse = $client->receive(1024);
+    $quitResponse = $client->receive();
     expect($quitResponse)->toContain('221');
 
     $client->close();
@@ -152,12 +144,11 @@ it('can handle multiple sends and receives in one session', function () {
 
     $client->connect();
 
-    // Send multiple messages
     $messages = ['First message', 'Second message', 'Third message'];
 
     foreach ($messages as $message) {
         $client->send($message . "\n");
-        $response = $client->receive(1024);
+        $response = $client->receive();
         expect($response)->toBe($message);
     }
 

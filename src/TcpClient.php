@@ -2,7 +2,6 @@
 
 namespace Spatie\SimpleTcpClient;
 
-use Exception;
 use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
 use Spatie\SimpleTcpClient\Exceptions\CommunicationFailed;
 use Spatie\SimpleTcpClient\Exceptions\ClientNotConnected;
@@ -124,7 +123,6 @@ class TcpClient
 
     public function close(): self
     {
-
         if ($this->socket) {
             socket_close($this->socket);
             $this->socket = null;
@@ -137,5 +135,4 @@ class TcpClient
     {
         $this->close();
     }
-
 }
