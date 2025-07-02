@@ -7,6 +7,7 @@ use Spatie\SimpleTcpClient\Support\SocketError;
 class CommunicationFailed extends TcpClientException
 {
     public readonly int $errorCode;
+
     public readonly string $errorMessage;
 
     public function __construct(string $message, int $errorCode, string $errorMessage)
@@ -19,12 +20,14 @@ class CommunicationFailed extends TcpClientException
     public static function sendFailed(int $errorCode, string $errorMessage): self
     {
         $errorDescription = SocketError::description($errorCode, $errorMessage);
+
         return new static("Failed to send data. [{$errorCode}] {$errorDescription}", $errorCode, $errorMessage);
     }
 
     public static function receiveFailed(int $errorCode, string $errorMessage): self
     {
         $errorDescription = SocketError::description($errorCode, $errorMessage);
+
         return new static("Failed to receive data. [{$errorCode}] {$errorDescription}", $errorCode, $errorMessage);
     }
 }

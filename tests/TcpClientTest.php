@@ -1,8 +1,8 @@
 <?php
 
-use Spatie\SimpleTcpClient\TcpClient;
 use Spatie\SimpleTcpClient\Exceptions\ClientNotConnected;
 use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
+use Spatie\SimpleTcpClient\TcpClient;
 
 it('can connect to httpbin.org and send HTTP request', function () {
     $client = new TcpClient('httpbin.org', 80, 10);
@@ -85,7 +85,7 @@ it('can test if a port is open by attempting connection', function () {
     // Test open port (Google DNS on 53)
     $client = new TcpClient('8.8.8.8', 53, 5);
 
-    expect(fn() => $client->connect())->not->toThrow(Exception::class);
+    expect(fn () => $client->connect())->not->toThrow(Exception::class);
 
     $client->close();
 });
@@ -94,19 +94,19 @@ it('throws exception when connecting to closed port', function () {
     // Try to connect to a likely closed port
     $client = new TcpClient('httpbin.org', 12345, 3);
 
-    expect(fn() => $client->connect())->toThrow(Exception::class);
+    expect(fn () => $client->connect())->toThrow(Exception::class);
 });
 
 it('throws exception when sending without connection', function () {
     $client = new TcpClient('localhost', 8080);
 
-    expect(fn() => $client->send('test'))->toThrow(ClientNotConnected::class, 'Not connected to server');
+    expect(fn () => $client->send('test'))->toThrow(ClientNotConnected::class, 'Not connected to server');
 });
 
 it('throws exception when receiving without connection', function () {
     $client = new TcpClient('localhost', 8080);
 
-    expect(fn() => $client->receive())->toThrow(ClientNotConnected::class, 'Not connected to server');
+    expect(fn () => $client->receive())->toThrow(ClientNotConnected::class, 'Not connected to server');
 });
 
 it('can handle connection timeout', function () {
@@ -115,7 +115,7 @@ it('can handle connection timeout', function () {
 
     $start = microtime(true);
 
-    expect(fn() => $client->connect())->toThrow(ConnectionTimeout::class, 'Connection timeout');
+    expect(fn () => $client->connect())->toThrow(ConnectionTimeout::class, 'Connection timeout');
 
     $elapsed = microtime(true) - $start;
 
@@ -156,7 +156,7 @@ it('can handle multiple sends and receives in one session', function () {
     $messages = ['First message', 'Second message', 'Third message'];
 
     foreach ($messages as $message) {
-        $client->send($message . "\n");
+        $client->send($message."\n");
         $response = $client->receive(1024);
         expect($response)->toBe($message);
     }

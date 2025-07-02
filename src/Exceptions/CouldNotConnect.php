@@ -7,6 +7,7 @@ use Spatie\SimpleTcpClient\Support\SocketError;
 class CouldNotConnect extends TcpClientException
 {
     public readonly int $errorCode;
+
     public readonly string $errorMessage;
 
     public function __construct(string $message, int $errorCode, string $errorMessage)
@@ -30,7 +31,4 @@ class CouldNotConnect extends TcpClientException
 
         return new static("Failed to connect to {$host}:{$port}. [{$errorCode}] {$errorDescription}", $errorCode, $errorMessage);
     }
-
-
-
 }
