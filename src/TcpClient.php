@@ -17,7 +17,6 @@ class TcpClient
 
     protected int|float $timeout;
 
-
     public function __construct(
         string $host = 'localhost',
         int $port = 8080,
@@ -66,7 +65,7 @@ class TcpClient
                     $this->close();
                     throw CouldNotConnect::connectionFailed($this->host, $this->port, $errorCode, $errorMessage);
                 }
-                
+
             } else {
                 $errorMessage = socket_strerror($error);
                 $this->close();
@@ -76,7 +75,6 @@ class TcpClient
 
         // Set socket back to blocking mode for reliable communication
         socket_set_block($this->socket);
-
 
         return $this;
     }
@@ -126,7 +124,7 @@ class TcpClient
         $read = [$this->socket];
         $write = null;
         $except = null;
-        
+
         $selectStart = microtime(true);
         $result = socket_select($read, $write, $except, (int) $this->timeout);
         $selectDuration = microtime(true) - $selectStart;
@@ -139,6 +137,7 @@ class TcpClient
             if ($debug) {
                 error_log("TcpClient: Timeout - no data available after {$this->timeout}s");
             }
+
             return null; // Timeout - no data available
         }
 
@@ -158,7 +157,7 @@ class TcpClient
             $dataLength = $data === false ? 'false' : strlen($data);
             error_log("TcpClient: socket_read returned data length: {$dataLength}");
             if ($data !== false && $dataLength > 0) {
-                error_log("TcpClient: Data preview: " . substr($data, 0, 100) . ($dataLength > 100 ? '...' : ''));
+                error_log('TcpClient: Data preview: '.substr($data, 0, 100).($dataLength > 100 ? '...' : ''));
             }
         }
 
@@ -172,8 +171,9 @@ class TcpClient
                 throw CommunicationFailed::receiveFailed($error, $errorMessage);
             }
             if ($debug) {
-                error_log("TcpClient: Connection closed gracefully");
+                error_log('TcpClient: Connection closed gracefully');
             }
+
             return null; // Connection closed gracefully
         }
 
@@ -181,14 +181,12 @@ class TcpClient
         return $trim ? trim($data) : $data;
     }
 
-
     public function close(): self
     {
         if ($this->socket) {
             socket_close($this->socket);
             $this->socket = null;
         }
-
 
         return $this;
     }
