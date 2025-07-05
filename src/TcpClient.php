@@ -74,8 +74,8 @@ class TcpClient
             }
         }
 
-        // Keep socket in non-blocking mode for web compatibility
-        // Don't set back to blocking mode
+        // Set socket back to blocking mode for reliable communication
+        socket_set_block($this->socket);
 
 
         return $this;
@@ -112,44 +112,73 @@ class TcpClient
         return $this;
     }
 
-    public function receive(int $maxLength = 4096): ?string
+    public function receive(int $maxLength = 4096, bool $debug = false, bool $trim = true): ?string
     {
         if (! $this->socket) {
             throw ClientNotConnected::toServer();
         }
 
-
-        $startTime = microtime(true);
-
-        while (true) {
-            $data = socket_read($this->socket, $maxLength);
-
-            if ($data === false) {
-                $error = socket_last_error($this->socket);
-
-                // Handle EAGAIN/EWOULDBLOCK - no data available yet
-                if ($error === SOCKET_EAGAIN || $error === SOCKET_EWOULDBLOCK) {
-                    // Check timeout
-                    if (microtime(true) - $startTime > $this->timeout) {
-                        return null; // Timeout reached, no data available
-                    }
-
-                    usleep(1000); // Wait 1ms before retry
-
-                    continue;
-                }
-
-                if ($error !== 0) {
-                    $errorMessage = socket_strerror($error);
-                    throw CommunicationFailed::receiveFailed($error, $errorMessage);
-                }
-
-                return null; // Connection closed gracefully
-            }
-
-            // Got data, return it
-            return trim($data);
+        if ($debug) {
+            error_log("TcpClient: Starting receive with timeout: {$this->timeout}s, maxLength: {$maxLength}");
         }
+
+        // Use socket_select to check for data availability with timeout
+        $read = [$this->socket];
+        $write = null;
+        $except = null;
+        
+        $selectStart = microtime(true);
+        $result = socket_select($read, $write, $except, (int) $this->timeout);
+        $selectDuration = microtime(true) - $selectStart;
+
+        if ($debug) {
+            error_log("TcpClient: socket_select result: {$result}, duration: {$selectDuration}s");
+        }
+
+        if ($result === 0) {
+            if ($debug) {
+                error_log("TcpClient: Timeout - no data available after {$this->timeout}s");
+            }
+            return null; // Timeout - no data available
+        }
+
+        if ($result === false) {
+            $error = socket_last_error($this->socket);
+            $errorMessage = socket_strerror($error);
+            if ($debug) {
+                error_log("TcpClient: socket_select failed - Error: {$error}, Message: {$errorMessage}");
+            }
+            throw CommunicationFailed::receiveFailed($error, $errorMessage);
+        }
+
+        // Data is available, read it
+        $data = socket_read($this->socket, $maxLength);
+
+        if ($debug) {
+            $dataLength = $data === false ? 'false' : strlen($data);
+            error_log("TcpClient: socket_read returned data length: {$dataLength}");
+            if ($data !== false && $dataLength > 0) {
+                error_log("TcpClient: Data preview: " . substr($data, 0, 100) . ($dataLength > 100 ? '...' : ''));
+            }
+        }
+
+        if ($data === false) {
+            $error = socket_last_error($this->socket);
+            if ($error !== 0) {
+                $errorMessage = socket_strerror($error);
+                if ($debug) {
+                    error_log("TcpClient: socket_read failed - Error: {$error}, Message: {$errorMessage}");
+                }
+                throw CommunicationFailed::receiveFailed($error, $errorMessage);
+            }
+            if ($debug) {
+                error_log("TcpClient: Connection closed gracefully");
+            }
+            return null; // Connection closed gracefully
+        }
+
+        // Return data, optionally trimmed for backward compatibility
+        return $trim ? trim($data) : $data;
     }
 
 
