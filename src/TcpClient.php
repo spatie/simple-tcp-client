@@ -72,16 +72,8 @@ class TcpClient
             }
         }
 
-        // Set socket back to blocking mode
-        socket_set_block($this->socket);
-
-        $timeoutArray = [
-            'sec' => (int) $this->timeout,
-            'usec' => (int) (($this->timeout - (int) $this->timeout) * 1000000),
-        ];
-
-        socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, $timeoutArray);
-        socket_set_option($this->socket, SOL_SOCKET, SO_SNDTIMEO, $timeoutArray);
+        // Keep socket in non-blocking mode for web compatibility
+        // Don't set back to blocking mode
 
         return $this;
     }
@@ -92,12 +84,25 @@ class TcpClient
             throw ClientNotConnected::toServer();
         }
 
-        $bytes = socket_write($this->socket, $message, strlen($message));
+        $totalBytes = strlen($message);
+        $bytesSent = 0;
 
-        if ($bytes === false) {
-            $errorCode = socket_last_error($this->socket);
-            $errorMessage = socket_strerror($errorCode);
-            throw CommunicationFailed::sendFailed($errorCode, $errorMessage);
+        while ($bytesSent < $totalBytes) {
+            $result = socket_write($this->socket, substr($message, $bytesSent), $totalBytes - $bytesSent);
+
+            if ($result === false) {
+                $errorCode = socket_last_error($this->socket);
+                // Handle EAGAIN/EWOULDBLOCK - retry operation
+                if ($errorCode === SOCKET_EAGAIN || $errorCode === SOCKET_EWOULDBLOCK) {
+                    usleep(1000); // Wait 1ms before retry
+                    continue;
+                }
+                
+                $errorMessage = socket_strerror($errorCode);
+                throw CommunicationFailed::sendFailed($errorCode, $errorMessage);
+            }
+
+            $bytesSent += $result;
         }
 
         return $this;
@@ -109,24 +114,36 @@ class TcpClient
             throw ClientNotConnected::toServer();
         }
 
-        $data = socket_read($this->socket, $maxLength);
+        $startTime = microtime(true);
+        
+        while (true) {
+            $data = socket_read($this->socket, $maxLength);
 
-        if ($data === false) {
-            $error = socket_last_error($this->socket);
-            if ($error !== 0) {
-                // Handle EAGAIN/EWOULDBLOCK - operation would block, no data available
+            if ($data === false) {
+                $error = socket_last_error($this->socket);
+                
+                // Handle EAGAIN/EWOULDBLOCK - no data available yet
                 if ($error === SOCKET_EAGAIN || $error === SOCKET_EWOULDBLOCK) {
-                    return null; // No data available, timeout reached
+                    // Check timeout
+                    if (microtime(true) - $startTime > $this->timeout) {
+                        return null; // Timeout reached, no data available
+                    }
+                    
+                    usleep(1000); // Wait 1ms before retry
+                    continue;
                 }
                 
-                $errorMessage = socket_strerror($error);
-                throw CommunicationFailed::receiveFailed($error, $errorMessage);
+                if ($error !== 0) {
+                    $errorMessage = socket_strerror($error);
+                    throw CommunicationFailed::receiveFailed($error, $errorMessage);
+                }
+
+                return null; // Connection closed gracefully
             }
 
-            return null; // Connection closed gracefully
+            // Got data, return it
+            return trim($data);
         }
-
-        return trim($data);
     }
 
     public function close(): self
