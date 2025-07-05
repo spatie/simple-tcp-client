@@ -1,6 +1,7 @@
 <?php
+
 // Web server endpoint that uses TcpClient with Gmail SMTP
-require_once __DIR__ . '/../../../vendor/autoload.php';
+require_once __DIR__.'/../../../vendor/autoload.php';
 
 use Spatie\SimpleTcpClient\TcpClient;
 
@@ -16,8 +17,8 @@ try {
     // First, receive the greeting from Gmail SMTP server
     $greeting = $client->receive();
 
-    if (!$greeting || strpos($greeting, '220') === false) {
-        echo "WEB_FAIL_GREETING";
+    if (! $greeting || strpos($greeting, '220') === false) {
+        echo 'WEB_FAIL_GREETING';
         $client->close();
         exit;
     }
@@ -36,11 +37,11 @@ try {
         strpos($ehloResponse, '250') !== false &&
         strpos($ehloResponse, 'smtp.gmail.com') !== false &&
         strpos($ehloResponse, 'STARTTLS') !== false) {
-        echo "WEB_SUCCESS_SMTP";
+        echo 'WEB_SUCCESS_SMTP';
     } else {
-        echo "WEB_FAIL_EHLO";
+        echo 'WEB_FAIL_EHLO';
     }
 
 } catch (Exception $e) {
-    echo "WEB_ERROR: " . $e->getMessage();
+    echo 'WEB_ERROR: '.$e->getMessage();
 }

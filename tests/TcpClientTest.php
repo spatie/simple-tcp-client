@@ -158,41 +158,41 @@ it('can handle multiple sends and receives in one session', function () {
 it('can work in actual web request context via PHP built-in server', function () {
     // Start PHP built-in web server in background
     $port = 8999;
-    
+
     // Start the web server
     $serverProcess = proc_open(
-        "php -S localhost:$port -t " . __DIR__ . "/TestSupport/scripts",
+        "php -S localhost:$port -t ".__DIR__.'/TestSupport/scripts',
         [
             0 => ['pipe', 'r'],
             1 => ['pipe', 'w'],
-            2 => ['pipe', 'w']
+            2 => ['pipe', 'w'],
         ],
         $pipes
     );
-    
+
     // Wait for server to start
     sleep(1);
-    
+
     try {
         // Make an HTTP request to our test endpoint
         $context = stream_context_create([
             'http' => [
                 'timeout' => 10,
-                'method' => 'GET'
-            ]
+                'method' => 'GET',
+            ],
         ]);
-        
+
         $startTime = microtime(true);
         $response = file_get_contents("http://localhost:$port/web-server-test.php", false, $context);
         $elapsed = microtime(true) - $startTime;
-        
+
         // Verify the web request completed successfully with SMTP
         expect($response)->toBe('WEB_SUCCESS_SMTP');
-        
+
         // Should complete within reasonable time (proves non-blocking)
         expect($elapsed)->toBeLessThan(8);
         expect($elapsed)->toBeGreaterThan(0.1);
-        
+
     } finally {
         // Clean up the server process
         proc_terminate($serverProcess);
@@ -203,20 +203,20 @@ it('can work in actual web request context via PHP built-in server', function ()
 it('can handle timeout gracefully in web request context', function () {
     // Simulate a web request with timeout
     $client = new TcpClient('httpbin.org', 80, 2); // Short timeout
-    
+
     $client->connect();
-    
+
     // Send request but don't expect immediate response to test timeout
     $client->send("GET /delay/5 HTTP/1.1\r\nHost: httpbin.org\r\nConnection: close\r\n\r\n");
-    
+
     $startTime = microtime(true);
     $response = $client->receive();
     $elapsed = microtime(true) - $startTime;
-    
+
     // Should timeout and return null, not throw exception or block indefinitely
     expect($response)->toBeNull();
     expect($elapsed)->toBeLessThan(3); // Should timeout around 2 seconds
     expect($elapsed)->toBeGreaterThan(1.5); // But not too quickly
-    
+
     $client->close();
 });
