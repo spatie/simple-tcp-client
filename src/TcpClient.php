@@ -87,6 +87,9 @@ class TcpClient
             throw ClientNotConnected::toServer();
         }
 
+        // Convert literal \r\n escape sequences to actual CR+LF bytes
+        $message = str_replace(['\\r\\n', '\\r', '\\n'], ["\r\n", "\r", "\n"], $message);
+
         $totalBytes = strlen($message);
         $bytesSent = 0;
 

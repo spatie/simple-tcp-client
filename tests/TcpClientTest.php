@@ -223,3 +223,30 @@ it('can handle timeout gracefully in web request context', function () {
 
     $client->close();
 });
+
+it('can handle line ending conversion in send method', function () {
+    $client = new TcpClient('smtp.gmail.com', 587, 10);
+    
+    $client->connect();
+    
+    // Receive initial greeting
+    $greeting = $client->receive();
+    expect($greeting)->toContain('220');
+    
+    // Send EHLO command with literal \r\n that should be converted
+    $client->send("EHLO test.local\\r\\n");
+    
+    usleep(200000); // 200ms delay
+    $response = $client->receive();
+    
+    // Should receive proper SMTP response indicating the command was processed
+    expect($response)->toContain('250');
+    expect($response)->toContain('smtp.gmail.com');
+    
+    // Send QUIT to cleanly close
+    $client->send("QUIT\\r\\n");
+    $quitResponse = $client->receive();
+    expect($quitResponse)->toContain('221');
+    
+    $client->close();
+});
