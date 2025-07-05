@@ -1,4 +1,4 @@
-# Connect and send data through a TCP connection
+# 🔌 Connect and send data through a TCP connection
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/simple-tcp-client.svg?style=flat-square)](https://packagist.org/packages/spatie/simple-tcp-client)
 [![Tests](https://img.shields.io/github/actions/workflow/status/spatie/simple-tcp-client/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/spatie/simple-tcp-client/actions/workflows/run-tests.yml)
@@ -117,7 +117,7 @@ $client->close();
 In this example, we are going to check if port 53 is open or closed.
 
 ```php
-use Spatie\SimpleTcpClient\TcpClient
+use Spatie\SimpleTcpClient\TcpClient;
 use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
 
 try {
@@ -138,7 +138,7 @@ try {
 The client supports connection timeouts to prevent hanging:
 
 ```php
-use Spatie\SimpleTcpClient\TcpClient
+use Spatie\SimpleTcpClient\TcpClient;
 use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
 
 $client = new TcpClient(host: 'slow-server.com', port: 80, timeout: 5); // 5 second timeout
