@@ -17,7 +17,6 @@ class TcpClient
 
     protected int|float $timeout;
 
-
     public function __construct(
         string $host = 'localhost',
         int $port = 8080,
@@ -66,7 +65,7 @@ class TcpClient
                     $this->close();
                     throw CouldNotConnect::connectionFailed($this->host, $this->port, $errorCode, $errorMessage);
                 }
-                
+
             } else {
                 $errorMessage = socket_strerror($error);
                 $this->close();
@@ -76,7 +75,6 @@ class TcpClient
 
         // Keep socket in non-blocking mode for web compatibility
         // Don't set back to blocking mode
-
 
         return $this;
     }
@@ -118,7 +116,6 @@ class TcpClient
             throw ClientNotConnected::toServer();
         }
 
-
         $startTime = microtime(true);
 
         while (true) {
@@ -152,14 +149,12 @@ class TcpClient
         }
     }
 
-
     public function close(): self
     {
         if ($this->socket) {
             socket_close($this->socket);
             $this->socket = null;
         }
-
 
         return $this;
     }
