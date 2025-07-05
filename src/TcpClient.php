@@ -114,6 +114,11 @@ class TcpClient
         if ($data === false) {
             $error = socket_last_error($this->socket);
             if ($error !== 0) {
+                // Handle EAGAIN/EWOULDBLOCK - operation would block, no data available
+                if ($error === SOCKET_EAGAIN || $error === SOCKET_EWOULDBLOCK) {
+                    return null; // No data available, timeout reached
+                }
+                
                 $errorMessage = socket_strerror($error);
                 throw CommunicationFailed::receiveFailed($error, $errorMessage);
             }
