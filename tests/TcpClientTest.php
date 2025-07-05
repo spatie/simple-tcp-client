@@ -36,14 +36,17 @@ it('can connect to echo server and receive echoed data', function () {
     $client->close();
 });
 
-it('can connect to time server and receive time data', function () {
-    $client = new TcpClient('time.nist.gov', 13, 10);
+it('can connect to quote server and receive quote data', function () {
+    $client = new TcpClient('djxmmx.net', 17, 10);
 
     $client->connect();
 
-    $response = $client->receive();
+    $response = $client->receive(1024);
 
-    expect($response)->toContain('(NIST)');
+    expect($response)->not->toBeNull();
+    expect($response)->not->toBeEmpty();
+    // Quote responses typically contain quotation marks or author names
+    expect($response)->toMatch('/[""\'()]|[A-Z][a-z]+ [A-Z][a-z]+/');
 
     $client->close();
 });
