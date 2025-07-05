@@ -98,9 +98,10 @@ class TcpClient
                 // Handle EAGAIN/EWOULDBLOCK - retry operation
                 if ($errorCode === SOCKET_EAGAIN || $errorCode === SOCKET_EWOULDBLOCK) {
                     usleep(1000); // Wait 1ms before retry
+
                     continue;
                 }
-                
+
                 $errorMessage = socket_strerror($errorCode);
                 throw CommunicationFailed::sendFailed($errorCode, $errorMessage);
             }
@@ -119,24 +120,25 @@ class TcpClient
 
 
         $startTime = microtime(true);
-        
+
         while (true) {
             $data = socket_read($this->socket, $maxLength);
 
             if ($data === false) {
                 $error = socket_last_error($this->socket);
-                
+
                 // Handle EAGAIN/EWOULDBLOCK - no data available yet
                 if ($error === SOCKET_EAGAIN || $error === SOCKET_EWOULDBLOCK) {
                     // Check timeout
                     if (microtime(true) - $startTime > $this->timeout) {
                         return null; // Timeout reached, no data available
                     }
-                    
+
                     usleep(1000); // Wait 1ms before retry
+
                     continue;
                 }
-                
+
                 if ($error !== 0) {
                     $errorMessage = socket_strerror($error);
                     throw CommunicationFailed::receiveFailed($error, $errorMessage);
