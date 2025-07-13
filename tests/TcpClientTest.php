@@ -5,7 +5,7 @@ use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
 use Spatie\SimpleTcpClient\TcpClient;
 
 it('can connect to httpbin.org and send HTTP request', function () {
-    $client = new TcpClient('httpbin.org', 80, 10);
+    $client = new TcpClient('httpbin.org', 80, 10_000);
 
     $client->connect();
 
@@ -22,7 +22,7 @@ it('can connect to httpbin.org and send HTTP request', function () {
 
 it('can connect to echo server and receive echoed data', function () {
     // tcpbin.com provides echo service on port 4242
-    $client = new TcpClient('tcpbin.com', 4242, 10);
+    $client = new TcpClient('tcpbin.com', 4242, 10_000);
 
     $client->connect();
 
@@ -37,7 +37,7 @@ it('can connect to echo server and receive echoed data', function () {
 });
 
 it('can connect to quote server and receive quote data', function () {
-    $client = new TcpClient('djxmmx.net', 17, 10);
+    $client = new TcpClient('djxmmx.net', 17, 10_000);
 
     $client->connect();
 
@@ -52,7 +52,7 @@ it('can connect to quote server and receive quote data', function () {
 });
 
 it('can connect to Gmail SMTP and send EHLO command', function () {
-    $client = new TcpClient('smtp.gmail.com', 587, 15);
+    $client = new TcpClient('smtp.gmail.com', 587, 15_000);
 
     $client->connect();
 
@@ -62,7 +62,7 @@ it('can connect to Gmail SMTP and send EHLO command', function () {
 
     $client->send("EHLO test.local\r\n");
 
-    usleep(200000); // 200ms delay
+    usleep(200_000); // 200ms delay
     $response = $client->receive(4096);
 
     expect($response)->toContain('250');
@@ -81,7 +81,7 @@ it('can connect to Gmail SMTP and send EHLO command', function () {
 
 it('can test if a port is open by attempting connection', function () {
     // Test open port (Google DNS on 53)
-    $client = new TcpClient('8.8.8.8', 53, 5);
+    $client = new TcpClient('8.8.8.8', 53, 5_000);
 
     expect(fn () => $client->connect())->not->toThrow(Exception::class);
 
@@ -90,7 +90,7 @@ it('can test if a port is open by attempting connection', function () {
 
 it('throws exception when connecting to closed port', function () {
     // Try to connect to a likely closed port
-    $client = new TcpClient('httpbin.org', 12345, 3);
+    $client = new TcpClient('httpbin.org', 12345, 3_000);
 
     expect(fn () => $client->connect())->toThrow(ConnectionTimeout::class);
 });
@@ -109,7 +109,7 @@ it('throws exception when receiving without connection', function () {
 
 it('can handle connection timeout', function () {
     // Use a valid IP with filtered port to trigger timeout
-    $client = new TcpClient('8.8.8.8', 12345, 2);
+    $client = new TcpClient('8.8.8.8', 12345, 2_000);
 
     $start = microtime(true);
 
@@ -117,13 +117,13 @@ it('can handle connection timeout', function () {
 
     $elapsed = microtime(true) - $start;
 
-    // Should timeout close to the specified timeout (2 seconds + small buffer)
+    // Should timeout close to the specified timeout (2000ms + small buffer)
     expect($elapsed)->toBeGreaterThan(1.5);
     expect($elapsed)->toBeLessThan(3);
 });
 
 it('can connect to FTP server and receive welcome message', function () {
-    $client = new TcpClient('ftp.dlptest.com', 21, 10);
+    $client = new TcpClient('ftp.dlptest.com', 21, 10_000);
 
     $client->connect();
 
@@ -143,7 +143,7 @@ it('can connect to FTP server and receive welcome message', function () {
 });
 
 it('can handle multiple sends and receives in one session', function () {
-    $client = new TcpClient('tcpbin.com', 4242, 10);
+    $client = new TcpClient('tcpbin.com', 4242, 10_000);
 
     $client->connect();
 
@@ -180,7 +180,7 @@ it('can work in actual web request context via PHP built-in server', function ()
         // Make an HTTP request to our test endpoint
         $context = stream_context_create([
             'http' => [
-                'timeout' => 10,
+                'timeout' => 10_000,
                 'method' => 'GET',
             ],
         ]);
@@ -205,7 +205,7 @@ it('can work in actual web request context via PHP built-in server', function ()
 
 it('can handle timeout gracefully in web request context', function () {
     // Simulate a web request with timeout
-    $client = new TcpClient('httpbin.org', 80, 2); // Short timeout
+    $client = new TcpClient('httpbin.org', 80, 2_000); // Short timeout in milliseconds
 
     $client->connect();
 
@@ -218,35 +218,72 @@ it('can handle timeout gracefully in web request context', function () {
 
     // Should timeout and return null, not throw exception or block indefinitely
     expect($response)->toBeNull();
-    expect($elapsed)->toBeLessThan(3); // Should timeout around 2 seconds
+    expect($elapsed)->toBeLessThan(3); // Should timeout around 2000ms
     expect($elapsed)->toBeGreaterThan(1.5); // But not too quickly
 
     $client->close();
 });
 
 it('can handle line ending conversion in send method', function () {
-    $client = new TcpClient('smtp.gmail.com', 587, 10);
-    
+    $client = new TcpClient('smtp.gmail.com', 587, 10_000);
+
     $client->connect();
-    
+
     // Receive initial greeting
     $greeting = $client->receive();
     expect($greeting)->toContain('220');
-    
+
     // Send EHLO command with literal \r\n that should be converted
-    $client->send("EHLO test.local\\r\\n");
-    
-    usleep(200000); // 200ms delay
+    $client->send('EHLO test.local\\r\\n');
+
+    usleep(200_000); // 200ms delay
     $response = $client->receive();
-    
+
     // Should receive proper SMTP response indicating the command was processed
     expect($response)->toContain('250');
     expect($response)->toContain('smtp.gmail.com');
-    
+
     // Send QUIT to cleanly close
-    $client->send("QUIT\\r\\n");
+    $client->send('QUIT\\r\\n');
     $quitResponse = $client->receive();
     expect($quitResponse)->toContain('221');
-    
+
+    $client->close();
+});
+
+it('verifies millisecond timeout precision', function () {
+    // Test with a filtered port that will cause timeout
+    $client = new TcpClient('8.8.8.8', 12345, 500); // 500ms timeout
+
+    $start = microtime(true);
+
+    expect(fn () => $client->connect())->toThrow(ConnectionTimeout::class);
+
+    $elapsed = (microtime(true) - $start) * 1000; // Convert to milliseconds
+
+    // Should timeout close to 500ms (allowing for some overhead)
+    expect($elapsed)->toBeGreaterThan(400); // At least 400ms
+    expect($elapsed)->toBeLessThan(700); // But less than 700ms
+});
+
+it('can handle sub-second receive timeout', function () {
+    $client = new TcpClient('httpbin.org', 80, 1_500); // 1.5 second timeout
+
+    $client->connect();
+
+    // Send a request that will take longer than our timeout
+    $client->send("GET /delay/3 HTTP/1.1\r\nHost: httpbin.org\r\nConnection: close\r\n\r\n");
+
+    $start = microtime(true);
+    $response = $client->receive();
+    $elapsed = (microtime(true) - $start) * 1000; // Convert to milliseconds
+
+    // Should timeout and return null
+    expect($response)->toBeNull();
+
+    // Should timeout close to 1500ms
+    expect($elapsed)->toBeGreaterThan(1_400); // At least 1400ms
+    expect($elapsed)->toBeLessThan(1_700); // But less than 1700ms
+
     $client->close();
 });

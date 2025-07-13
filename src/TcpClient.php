@@ -15,16 +15,16 @@ class TcpClient
 
     protected int $port;
 
-    protected int|float $timeout;
+    protected int $timeoutInMs;
 
     public function __construct(
-        string $host = 'localhost',
-        int $port = 8080,
-        int|float $timeout = 10
+        string $host,
+        int $port,
+        int $timeoutInMs = 2_000
     ) {
         $this->host = $host;
         $this->port = $port;
-        $this->timeout = $timeout;
+        $this->timeoutInMs = $timeoutInMs;
     }
 
     public function connect(): self
@@ -52,7 +52,9 @@ class TcpClient
                 $write = [$this->socket];
                 $except = [$this->socket];
 
-                $result = socket_select($read, $write, $except, (int) $this->timeout);
+                $seconds = (int) ($this->timeoutInMs / 1000);
+                $microseconds = (int) (($this->timeoutInMs % 1000) * 1000);
+                $result = socket_select($read, $write, $except, $seconds, $microseconds);
 
                 if ($result === 0) {
                     $this->close();
@@ -98,7 +100,7 @@ class TcpClient
                 $errorCode = socket_last_error($this->socket);
                 // Handle EAGAIN/EWOULDBLOCK - retry operation
                 if ($errorCode === SOCKET_EAGAIN || $errorCode === SOCKET_EWOULDBLOCK) {
-                    usleep(1000); // Wait 1ms before retry
+                    usleep(1_000); // Wait 1ms before retry
 
                     continue;
                 }
@@ -120,7 +122,7 @@ class TcpClient
         }
 
         if ($debug) {
-            error_log("TcpClient: Starting receive with timeout: {$this->timeout}s, maxLength: {$maxLength}");
+            error_log("TcpClient: Starting receive with timeout: {$this->timeoutInMs}ms, maxLength: {$maxLength}");
         }
 
         // Use socket_select to check for data availability with timeout
@@ -129,7 +131,9 @@ class TcpClient
         $except = null;
 
         $selectStart = microtime(true);
-        $result = socket_select($read, $write, $except, (int) $this->timeout);
+        $seconds = (int) ($this->timeoutInMs / 1000);
+        $microseconds = (int) (($this->timeoutInMs % 1000) * 1000);
+        $result = socket_select($read, $write, $except, $seconds, $microseconds);
         $selectDuration = microtime(true) - $selectStart;
 
         if ($debug) {
@@ -138,7 +142,7 @@ class TcpClient
 
         if ($result === 0) {
             if ($debug) {
-                error_log("TcpClient: Timeout - no data available after {$this->timeout}s");
+                error_log("TcpClient: Timeout - no data available after {$this->timeoutInMs}ms");
             }
 
             return null; // Timeout - no data available

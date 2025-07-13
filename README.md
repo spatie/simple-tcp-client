@@ -9,7 +9,7 @@ This package provides a simple and elegant way to create TCP connections, send d
 ```php
 use Spatie\SimpleTcpClient\TcpClient;
 
-$client = new TcpClient(host: 'smtp.gmail.com', port: 587);
+$client = new TcpClient('smtp.gmail.com', 587);
 
 $client->connect();
 
@@ -46,12 +46,12 @@ Here's how you can connect to TCP service:
 ```php
 use Spatie\SimpleTcpClient\TcpClient;
 
-$client = new TcpClient(host: 'example.com', port: 80);
+$client = new TcpClient('example.com', 80);
 
 $client->connect();
 ```
 
-### Sending and Receiving Data
+### Sending and receiving data
 
 You can use `send` and `receive` methods to send and receive data.
 
@@ -69,7 +69,24 @@ By default, we'll read 8192 bytes of data. You can optionally specify the maximu
 $response = $client->receive(1024);
 ```
 
-### HTTP Requests over TCP
+### Handling timeouts
+
+The client supports connection timeouts to prevent hanging:
+
+```php
+use Spatie\SimpleTcpClient\TcpClient;
+use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
+
+$client = new TcpClient('slow-server.com', 80, 5_000); // 5000ms (5 second) timeout
+
+try {
+    $client->connect();
+} catch (ConnectionTimeout $exception) {
+    echo "Server took too long to respond: " . $exception->getMessage();
+}
+```
+
+### HTTP requests over TCP
 
 Here's a full example where we use all methods.
 
@@ -91,12 +108,14 @@ echo $response;
 $client->close();
 ```
 
-### Testing SMTP Connections
+### Testing SMTP connections
 
 Here's how you could connect and communicate with an SMTP server.
 
 ```php
-$client = new TcpClient('smtp.gmail.com', 587, 15);
+use Spatie\SimpleTcpClient\TcpClient;
+
+$client = new TcpClient('smtp.gmail.com', 587, 15_000); // 15 second timeout
 
 $client->connect();
 
@@ -112,7 +131,7 @@ echo $response; // 250-smtp.gmail.com capabilities...
 $client->close();
 ```
 
-### Port Scanning
+### Port scanning
 
 In this example, we are going to check if port 53 is open or closed.
 
@@ -121,7 +140,7 @@ use Spatie\SimpleTcpClient\TcpClient;
 use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
 
 try {
-    $client = new TcpClient(host: '8.8.8.8', port: 53, timeout: 5);
+    $client = new TcpClient('8.8.8.8', 53, 5_000);
     
     $client->connect();
     
@@ -130,23 +149,6 @@ try {
     $client->close();
 } catch (CouldNotConnect $exception) {
     echo "Port 53 is closed or filtered";
-}
-```
-
-### Handling timeouts
-
-The client supports connection timeouts to prevent hanging:
-
-```php
-use Spatie\SimpleTcpClient\TcpClient;
-use Spatie\SimpleTcpClient\Exceptions\ConnectionTimeout;
-
-$client = new TcpClient(host: 'slow-server.com', port: 80, timeout: 5); // 5 second timeout
-
-try {
-    $client->connect();
-} catch (ConnectionTimeout $exception) {
-    echo "Server took too long to respond: " . $exception->getMessage();
 }
 ```
 

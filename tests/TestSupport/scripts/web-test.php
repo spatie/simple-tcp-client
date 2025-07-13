@@ -9,7 +9,7 @@ use Spatie\SimpleTcpClient\TcpClient;
 ini_set('max_execution_time', 10);
 
 // Simulate a web request that uses TcpClient
-$client = new TcpClient('httpbin.org', 80, 5);
+$client = new TcpClient('httpbin.org', 80, 5_000); // 5 second timeout
 
 try {
     $client->connect();

@@ -9,7 +9,7 @@ use Spatie\SimpleTcpClient\TcpClient;
 header('Content-Type: text/plain');
 
 // This simulates what would happen in a real web request using Gmail SMTP
-$client = new TcpClient('smtp.gmail.com', 587, 10);
+$client = new TcpClient('smtp.gmail.com', 587, 10_000); // 10 second timeout
 
 try {
     $client->connect();
@@ -27,7 +27,7 @@ try {
     $client->send("EHLO webtest.local\r\n");
 
     // Receive the EHLO response
-    usleep(200000); // 200ms delay to ensure response is ready
+    usleep(200_000); // 200ms delay to ensure response is ready
     $ehloResponse = $client->receive(4096);
 
     $client->close();
