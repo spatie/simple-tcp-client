@@ -17,10 +17,10 @@
     "require": {
         "php": "^8.4",
         "ext-sockets": "*",
-        "spatie/pest-expectations": "^1.13.2"
     },
     "require-dev": {
         "pestphp/pest": "^3.0",
+        "spatie/pest-expectations": "^1.13.2",
         "laravel/pint": "^1.0",
         "spatie/ray": "^1.28"
     },
