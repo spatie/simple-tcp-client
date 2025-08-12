@@ -21,10 +21,10 @@ it('can connect to httpbin.org and send HTTP request', function () {
 });
 
 it('can connect to an ipv6 address', function () {
-    if (!isIPv6Available()) {
+    if (! isIPv6Available()) {
         $this->markTestSkipped('IPv6 not available on this system');
     }
-    
+
     $client = new TcpClient('2001:4860:4860::8888', 53, 10_000);
 
     $client->connect();
