@@ -16,7 +16,7 @@
     ],
     "require": {
         "php": "^8.4",
-        "ext-sockets": "*",
+        "ext-sockets": "*"
     },
     "require-dev": {
         "pestphp/pest": "^3.0",
