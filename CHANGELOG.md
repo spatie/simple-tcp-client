@@ -2,6 +2,10 @@
 
 All notable changes to `simple-tcp-client` will be documented in this file.
 
+## 1.1.0 - 2025-08-12
+
+- add support for ipv6
+
 ## 1.0.0 - 2025-07-14
 
 **Full Changelog**: https://github.com/spatie/simple-tcp-client/compare/0.0.3...1.0.0
