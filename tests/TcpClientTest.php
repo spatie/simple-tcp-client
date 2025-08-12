@@ -27,7 +27,8 @@ it('can connect to an ipv6 address', function () {
 
     $response = $client->receive();
 
-    dump($response);
+    expect($response)->toBe('hey');
+
 });
 
 it('can connect to echo server and receive echoed data', function () {
