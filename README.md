@@ -115,7 +115,7 @@ Here's how you could connect and communicate with an SMTP server.
 ```php
 use Spatie\SimpleTcpClient\TcpClient;
 
-$client = new TcpClient('smtp.gmail.com', 587, 15_000); // 15 second timeout
+$client = new TcpClient('smtp.gmail.com', 587);
 
 $client->connect();
 
@@ -140,7 +140,7 @@ use Spatie\SimpleTcpClient\TcpClient;
 use Spatie\SimpleTcpClient\Exceptions\CouldNotConnect;
 
 try {
-    $client = new TcpClient('8.8.8.8', 53, 5_000);
+    $client = new TcpClient('8.8.8.8', 53);
     
     $client->connect();
     
