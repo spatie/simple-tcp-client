@@ -2,6 +2,10 @@
 
 All notable changes to `simple-tcp-client` will be documented in this file.
 
+## 1.1.2 - 2025-08-12
+
+**Full Changelog**: https://github.com/spatie/simple-tcp-client/compare/1.1.1...1.1.2
+
 ## 1.1.1 - 2025-08-12
 
 **Full Changelog**: https://github.com/spatie/simple-tcp-client/compare/1.1.0...1.1.1
