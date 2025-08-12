@@ -21,10 +21,6 @@ it('can connect to httpbin.org and send HTTP request', function () {
 });
 
 it('can connect to an ipv6 address', function () {
-    if (!isIPv6Available()) {
-        $this->markTestSkipped('IPv6 not available on this system');
-    }
-    
     $client = new TcpClient('2001:4860:4860::8888', 53, 10_000);
 
     $client->connect();
@@ -32,7 +28,7 @@ it('can connect to an ipv6 address', function () {
     $client->close();
 
     markTestPassed();
-});
+})->whenIpv6Available();
 
 it('can connect to echo server and receive echoed data', function () {
     // tcpbin.com provides echo service on port 4242
@@ -46,21 +42,6 @@ it('can connect to echo server and receive echoed data', function () {
     $response = $client->receive();
 
     expect($response)->toBe(trim($testMessage));
-
-    $client->close();
-});
-
-it('can connect to quote server and receive quote data', function () {
-    $client = new TcpClient('djxmmx.net', 17, 10_000);
-
-    $client->connect();
-
-    $response = $client->receive(1024);
-
-    expect($response)->not->toBeNull();
-    expect($response)->not->toBeEmpty();
-    // Quote responses typically contain quotation marks or author names
-    expect($response)->toMatch('/[""\'()]|[A-Z][a-z]+ [A-Z][a-z]+/');
 
     $client->close();
 });

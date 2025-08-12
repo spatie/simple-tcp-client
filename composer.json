@@ -16,7 +16,8 @@
     ],
     "require": {
         "php": "^8.4",
-        "ext-sockets": "*"
+        "ext-sockets": "*",
+        "spatie/pest-expectations": "^1.12"
     },
     "require-dev": {
         "pestphp/pest": "^3.0",
