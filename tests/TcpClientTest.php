@@ -26,6 +26,8 @@ it('can connect to an ipv6 address', function () {
     $client->connect();
 
     $response = $client->receive();
+
+    dump($response);
 });
 
 it('can connect to echo server and receive echoed data', function () {
