@@ -189,7 +189,6 @@ class TcpClient
             return null; // Connection closed gracefully
         }
 
-        // Return data, optionally trimmed for backward compatibility
         return $trim ? trim($data) : $data;
     }
 
