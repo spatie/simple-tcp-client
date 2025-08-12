@@ -20,6 +20,14 @@ it('can connect to httpbin.org and send HTTP request', function () {
     $client->close();
 });
 
+it('can connect to an ipv6 address', function () {
+    $client = new TcpClient('2001:4860:4860::8888', 53, 10_000);
+
+    $client->connect();
+
+    $response = $client->receive();
+});
+
 it('can connect to echo server and receive echoed data', function () {
     // tcpbin.com provides echo service on port 4242
     $client = new TcpClient('tcpbin.com', 4242, 10_000);

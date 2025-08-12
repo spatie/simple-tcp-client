@@ -29,7 +29,12 @@ class TcpClient
 
     public function connect(): self
     {
-        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        // Detect address family (IPv4 or IPv6)
+        $addressFamily = filter_var($this->host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)
+            ? AF_INET6
+            : AF_INET;
+
+        $this->socket = socket_create($addressFamily, SOCK_STREAM, SOL_TCP);
 
         if ($this->socket === false) {
             $errorCode = socket_last_error();
