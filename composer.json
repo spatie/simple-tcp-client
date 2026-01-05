@@ -19,7 +19,7 @@
         "ext-sockets": "*"
     },
     "require-dev": {
-        "pestphp/pest": "^3.0",
+        "pestphp/pest": "^4.3",
         "spatie/pest-expectations": "^1.13.2",
         "laravel/pint": "^1.0",
         "spatie/ray": "^1.28"
