@@ -2,6 +2,15 @@
 
 All notable changes to `simple-tcp-client` will be documented in this file.
 
+## 1.1.3 - 2026-02-09
+
+### What's Changed
+
+#### Maintenance
+
+- Upgrade pestphp/pest from ^3.0 to ^4.3
+- Add PHP 8.5 to CI test matrix
+
 ## 1.1.2 - 2025-08-12
 
 **Full Changelog**: https://github.com/spatie/simple-tcp-client/compare/1.1.1...1.1.2
