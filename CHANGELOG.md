@@ -2,6 +2,22 @@
 
 All notable changes to `simple-tcp-client` will be documented in this file.
 
+## 1.1.4 - 2026-10-19
+
+### What's Changed
+
+#### Maintenance
+
+- Upgrade the development test suite to Pest 5.3 (#22).
+- Update GitHub Actions and harden the Dependabot auto-merge actor check.
+- Refresh CI badges in the README.
+
+#### Breaking Changes
+
+None for package consumers. Runtime dependencies, PHP requirements, and the public API are unchanged. Contributors now use Pest 5 and PHPUnit 13.
+
+**Full Changelog**: https://github.com/spatie/simple-tcp-client/compare/1.1.3...1.1.4
+
 ## 1.1.3 - 2026-02-09
 
 ### What's Changed
